@@ -1,7 +1,12 @@
 package com.krishiai.app.ui.chat
 
 import androidx.compose.foundation.background
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MicNone
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,8 +47,23 @@ import androidx.hilt.navigation.compose.hiltViewModel
 fun ChatScreen(
     viewModel: ChatViewModel = hiltViewModel()
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var inputText by remember { mutableStateOf("") }
     val messages = viewModel.messages
+    val isListening by viewModel.isListening.collectAsState()
+    
+    var hasPermission by remember { mutableStateOf(false) }
+    
+    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasPermission = isGranted
+        if (isGranted) {
+            viewModel.startListening()
+        } else {
+             android.widget.Toast.makeText(context, "Microphone permission needed", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -63,7 +83,10 @@ fun ChatScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(messages) { message ->
-                    MessageBubble(message)
+                    MessageBubble(
+                        message = message,
+                        onSpeak = { viewModel.speak(message.text) }
+                    )
                 }
             }
 
@@ -77,13 +100,32 @@ fun ChatScreen(
                     value = inputText,
                     onValueChange = { inputText = it },
                     modifier = Modifier.weight(1f),
-                    placeholder = { Text("Ask anything...") },
+                    placeholder = { Text(if (isListening) "Listening..." else "Ask anything...") },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = {
                         viewModel.sendMessage(inputText)
                         inputText = ""
                     })
                 )
+                
+                // Mic Button
+                IconButton(onClick = {
+                    val permission = androidx.core.content.ContextCompat.checkSelfPermission(
+                        context, android.Manifest.permission.RECORD_AUDIO
+                    )
+                    if (permission == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                        viewModel.startListening()
+                    } else {
+                        permissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+                    }
+                }) {
+                    Icon(
+                        imageVector = if (isListening) androidx.compose.material.icons.filled.Mic else androidx.compose.material.icons.filled.MicNone,
+                        contentDescription = "Voice Input",
+                        tint = if (isListening) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                    )
+                }
+
                 IconButton(onClick = {
                     viewModel.sendMessage(inputText)
                     inputText = ""
@@ -96,7 +138,10 @@ fun ChatScreen(
 }
 
 @Composable
-fun MessageBubble(message: ChatMessage) {
+fun MessageBubble(
+    message: ChatMessage,
+    onSpeak: () -> Unit
+) {
     val isUser = message.isUser
     Box(
         modifier = Modifier
@@ -104,24 +149,37 @@ fun MessageBubble(message: ChatMessage) {
             .padding(horizontal = 4.dp),
         contentAlignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
     ) {
-        Box(
-            modifier = Modifier
-                .clip(
-                    RoundedCornerShape(
-                        topStart = 16.dp,
-                        topEnd = 16.dp,
-                        bottomStart = if (isUser) 16.dp else 4.dp,
-                        bottomEnd = if (isUser) 4.dp else 16.dp
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (!isUser) {
+                IconButton(onClick = onSpeak, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.filled.VolumeUp,
+                        contentDescription = "Speak",
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.secondary
                     )
+                }
+            }
+            
+            Box(
+                modifier = Modifier
+                    .clip(
+                        RoundedCornerShape(
+                            topStart = 16.dp,
+                            topEnd = 16.dp,
+                            bottomStart = if (isUser) 16.dp else 4.dp,
+                            bottomEnd = if (isUser) 4.dp else 16.dp
+                        )
+                    )
+                    .background(if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer)
+                    .padding(12.dp)
+                    .widthIn(max = 260.dp)
+            ) {
+                Text(
+                    text = message.text,
+                    color = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
                 )
-                .background(if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer)
-                .padding(12.dp)
-                .widthIn(max = 280.dp)
-        ) {
-            Text(
-                text = message.text,
-                color = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
-            )
+            }
         }
     }
 }
