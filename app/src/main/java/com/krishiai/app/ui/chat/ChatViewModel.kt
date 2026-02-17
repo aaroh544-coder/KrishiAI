@@ -15,11 +15,33 @@ data class ChatMessage(
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
-    private val repository: ChatRepository
+    private val repository: ChatRepository,
+    private val speechManager: com.krishiai.app.util.SpeechManager
 ) : ViewModel() {
 
     private val _messages = mutableStateListOf<ChatMessage>()
     val messages: List<ChatMessage> = _messages
+    
+    val isListening = speechManager.isListening
+    val speechResult = speechManager.speechResult
+
+    init {
+        viewModelScope.launch {
+            speechResult.collect { text ->
+                if (text.isNotBlank()) {
+                    sendMessage(text)
+                }
+            }
+        }
+    }
+
+    fun startListening() {
+        speechManager.startListening()
+    }
+
+    fun speak(text: String) {
+        speechManager.speak(text)
+    }
 
     fun sendMessage(text: String) {
         if (text.isBlank()) return

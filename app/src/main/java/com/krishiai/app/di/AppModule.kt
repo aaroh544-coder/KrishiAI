@@ -16,6 +16,18 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideBillingManager(@dagger.hilt.android.qualifiers.ApplicationContext context: android.content.Context): com.krishiai.app.util.BillingManager {
+        return com.krishiai.app.util.BillingManager(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSpeechManager(@dagger.hilt.android.qualifiers.ApplicationContext context: android.content.Context): com.krishiai.app.util.SpeechManager {
+        return com.krishiai.app.util.SpeechManager(context)
+    }
+
+    @Provides
+    @Singleton
     fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
 
     @Provides
@@ -55,4 +67,8 @@ object AppModule {
     fun provideChatRepository(): com.krishiai.app.data.repository.ChatRepository {
         return com.krishiai.app.data.repository.ChatRepository()
     }
+
+    @Provides
+    @Singleton
+    fun provideMandiRepository(impl: com.krishiai.app.data.repository.MandiRepositoryImpl): com.krishiai.app.data.repository.MandiRepository = impl
 }

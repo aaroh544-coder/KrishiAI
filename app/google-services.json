@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1005338159407",
+    "project_id": "krishiai-bcd4d",
+    "storage_bucket": "krishiai-bcd4d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1005338159407:android:c701f998d76667c66399da",
+        "android_client_info": {
+          "package_name": "com.krishi.ai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAxjdSrCmbO5U_o6YQd65fFS5WenegaWwo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

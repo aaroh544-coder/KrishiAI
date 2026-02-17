@@ -2,6 +2,7 @@ package com.krishiai.app.ui
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
@@ -70,6 +71,14 @@ fun MainScreen(onLogout: () -> Unit) {
                     )
                 }
             }
+        },
+        floatingActionButton = {
+            androidx.compose.material3.FloatingActionButton(
+                onClick = { navController.navigate("disease_detection") },
+                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.tertiary
+            ) {
+                Icon(androidx.compose.material.icons.Icons.Default.CameraAlt, contentDescription = "Scan Crop")
+            }
         }
     ) { innerPadding ->
         NavHost(
@@ -79,9 +88,19 @@ fun MainScreen(onLogout: () -> Unit) {
         ) {
             composable(BottomNavItem.Home.route) { HomeScreen() }
             composable(BottomNavItem.Weather.route) { WeatherScreen() }
-            composable(BottomNavItem.Mandi.route) { MandiScreen() }
+            composable(BottomNavItem.Mandi.route) { 
+                com.krishiai.app.ui.mandi.MandiScreen(
+                    onAddClick = { navController.navigate("add_mandi") }
+                ) 
+            }
             composable(BottomNavItem.Chat.route) { ChatScreen() }
             composable(BottomNavItem.Profile.route) { ProfileScreen(onLogout) }
+            composable("disease_detection") { com.krishiai.app.ui.disease.DiseaseDetectionScreen() }
+            composable("add_mandi") { 
+                com.krishiai.app.ui.mandi.AddMandiScreen(
+                    onBack = { navController.popBackStack() }
+                ) 
+            }
         }
     }
 }
