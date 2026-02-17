@@ -10,24 +10,17 @@ data class Weather(
     val date: String
 )
 
-// API Response Models (Simplified for OpenWeatherMap or similar)
+// Open-Meteo Response Models
 data class WeatherResponse(
-    val main: Main,
-    val weather: List<WeatherDescription>,
-    val wind: Wind,
-    val name: String
+    val latitude: Double,
+    val longitude: Double,
+    val current_weather: CurrentWeather
 )
 
-data class Main(
-    val temp: Double,
-    val humidity: Int
-)
-
-data class WeatherDescription(
-    val description: String,
-    val icon: String
-)
-
-data class Wind(
-    val speed: Double
+data class CurrentWeather(
+    val temperature: Double,
+    val windspeed: Double,
+    val winddirection: Double,
+    val weathercode: Int,
+    val time: String
 )

@@ -40,7 +40,7 @@ object AppModule {
     @Singleton
     fun provideWeatherApi(): com.krishiai.app.data.remote.WeatherApi {
         return retrofit2.Retrofit.Builder()
-            .baseUrl("https://api.openweathermap.org/")
+            .baseUrl("https://api.open-meteo.com/")
             .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create())
             .build()
             .create(com.krishiai.app.data.remote.WeatherApi::class.java)
@@ -49,4 +49,10 @@ object AppModule {
     @Provides
     @Singleton
     fun provideWeatherRepository(impl: com.krishiai.app.data.repository.WeatherRepositoryImpl): com.krishiai.app.data.repository.WeatherRepository = impl
+
+    @Provides
+    @Singleton
+    fun provideChatRepository(): com.krishiai.app.data.repository.ChatRepository {
+        return com.krishiai.app.data.repository.ChatRepository()
+    }
 }
