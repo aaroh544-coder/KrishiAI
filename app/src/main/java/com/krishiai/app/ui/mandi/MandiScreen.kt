@@ -45,6 +45,7 @@ fun MandiScreen(
     viewModel: MandiViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
 
     Scaffold(
         topBar = {
@@ -62,41 +63,72 @@ fun MandiScreen(
             }
         }
     ) { paddingValues ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            contentAlignment = Alignment.Center
+                .padding(paddingValues)
         ) {
-            when (uiState) {
-                is MandiUiState.Initial, is MandiUiState.Loading -> {
-                    CircularProgressIndicator()
-                }
-                is MandiUiState.Success -> {
-                    val mandis = (uiState as MandiUiState.Success).mandis
-                    if (mandis.isEmpty()) {
-                        Text("No data available")
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            items(mandis) { mandi ->
-                                MandiItem(mandi)
+            // Search Bar
+            androidx.compose.material3.OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { viewModel.onSearchQueryChange(it) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                placeholder = { Text("Search commodity (e.g. Onion)") },
+                leadingIcon = {
+                    androidx.compose.material3.Icon(
+                        androidx.compose.material.icons.Icons.Default.Search,
+                        contentDescription = null
+                    )
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                when (uiState) {
+                    is MandiUiState.Initial, is MandiUiState.Loading -> {
+                        CircularProgressIndicator()
+                    }
+                    is MandiUiState.Success -> {
+                        val mandis = (uiState as MandiUiState.Success).mandis
+                        val filteredMandis = mandis.filter {
+                            it.commodity.contains(searchQuery, ignoreCase = true) ||
+                            it.name.contains(searchQuery, ignoreCase = true)
+                        }
+
+                        if (filteredMandis.isEmpty()) {
+                            Text("No matching data found")
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                                    start = 16.dp, 
+                                    end = 16.dp, 
+                                    bottom = 16.dp
+                                ),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                items(filteredMandis) { mandi ->
+                                    MandiItem(mandi)
+                                }
                             }
                         }
                     }
-                }
-                is MandiUiState.Error -> {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = (uiState as MandiUiState.Error).message,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { viewModel.fetchMandiPrices() }) {
-                            Text("Retry")
+                    is MandiUiState.Error -> {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = (uiState as MandiUiState.Error).message,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(onClick = { viewModel.fetchMandiPrices() }) {
+                                Text("Retry")
+                            }
                         }
                     }
                 }

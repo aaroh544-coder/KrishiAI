@@ -44,20 +44,19 @@ import com.krishiai.app.R
 fun ProfileScreen(
     onLogout: () -> Unit,
     authViewModel: AuthViewModel = hiltViewModel()
-    // billingManager would ideally be injected via a ViewModel, but for simplicity here:
-    // val billingManager = hiltViewModel<BillingViewModel>() or similar 
 ) {
     val context = LocalContext.current
     var showPrivacyPolicy by remember { mutableStateOf(false) }
-    // Mocking premium status for UI, normally observed from BillingManager
-    val isPremium = false 
+    val userProfile by authViewModel.userProfile.collectAsState()
+    val isPremium = userProfile?.subscriptionStatus == "premium"
 
     Scaffold { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(32.dp))
@@ -65,27 +64,46 @@ fun ProfileScreen(
             // Profile Image Placeholder
             Box(
                 modifier = Modifier
-                    .size(120.dp)
+                    .size(100.dp)
                     .clip(CircleShape)
-                    .background(Color.LightGray)
+                    .background(MaterialTheme.colorScheme.primaryContainer)
                     .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                 Text("USER", style = MaterialTheme.typography.displayMedium)
+                 Text(
+                     text = userProfile?.name?.take(1)?.uppercase() ?: "U",
+                     style = MaterialTheme.typography.displayMedium,
+                     color = MaterialTheme.colorScheme.onPrimaryContainer
+                 )
             }
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            Text(text = "Krishi AI User", style = MaterialTheme.typography.headlineSmall)
-            Text(text = "+91 9876543210", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+            Text(text = userProfile?.name ?: "User Name", style = MaterialTheme.typography.headlineSmall)
+            Text(text = userProfile?.phoneNumber ?: "+91 XXXXXXXXXX", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
             
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // User Details Section
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    DetailItem(label = "Village", value = userProfile?.village ?: "--")
+                    DetailItem(label = "District", value = userProfile?.district ?: "--")
+                    DetailItem(label = "Main Crop", value = userProfile?.mainCrop ?: "--")
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
             
             // Premium Subscription Card
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.medium)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(if(isPremium) Color.Green.copy(alpha=0.1f) else MaterialTheme.colorScheme.tertiaryContainer)
                     .padding(16.dp)
                     .clickable { 
@@ -100,14 +118,14 @@ fun ProfileScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Unlock advanced disease detection and unlimited chats.",
+                        text = "Unlock advanced disease detection and AI experts.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(32.dp))
             
             // Privacy Policy
             Text(
@@ -134,5 +152,18 @@ fun ProfileScreen(
 
     if (showPrivacyPolicy) {
         PrivacyPolicyDialog(onDismiss = { showPrivacyPolicy = false })
+    }
+}
+
+@Composable
+fun DetailItem(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = label, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+        Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
     }
 }

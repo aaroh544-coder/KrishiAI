@@ -26,10 +26,12 @@ class WeatherRepositoryImpl @Inject constructor(
         val description = getWeatherDescription(weatherCode)
         val icon = getWeatherIcon(weatherCode)
         
+        val humidity = response.hourly?.relative_humidity_2m?.firstOrNull()?.toInt() ?: 0
+        
         return Weather(
             temperature = response.current_weather.temperature,
             description = description,
-            humidity = 0, // Open-Meteo basic current_weather doesn't give humidity, would need hourly. Setting 0 or hiding.
+            humidity = humidity,
             windSpeed = response.current_weather.windspeed,
             iconUrl = "https://openweathermap.org/img/wn/$icon@2x.png", // reusing OWM icons for simplicity if possible, or local resources. actually for now let's use a generic url or skip icon logic to avoid crash. 
             // Better: use local drawables based on code. For now, empty or placeholder.

@@ -28,6 +28,9 @@ class MandiViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<MandiUiState>(MandiUiState.Initial)
     val uiState: StateFlow<MandiUiState> = _uiState.asStateFlow()
 
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
     init {
         fetchMandiPrices()
     }
@@ -40,11 +43,17 @@ class MandiViewModel @Inject constructor(
                 .collect { mandis ->
                     _uiState.value = MandiUiState.Success(mandis)
                 }
-            fun addMandi(mandi: Mandi) {
+        }
+    }
+
+    fun onSearchQueryChange(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun addMandi(mandi: Mandi) {
         viewModelScope.launch {
             repository.addMandiPrice(mandi)
             fetchMandiPrices() // Refresh list
         }
-    }
     }
 }

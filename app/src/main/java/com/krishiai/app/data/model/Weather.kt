@@ -14,7 +14,13 @@ data class Weather(
 data class WeatherResponse(
     val latitude: Double,
     val longitude: Double,
-    val current_weather: CurrentWeather
+    val current_weather: CurrentWeather,
+    val hourly: HourlyData? = null
+)
+
+data class HourlyData(
+    val time: List<String>,
+    val relative_humidity_2m: List<Double>
 )
 
 data class CurrentWeather(

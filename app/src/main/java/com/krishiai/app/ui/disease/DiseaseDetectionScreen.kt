@@ -5,6 +5,8 @@ import android.graphics.Bitmap
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.ImageProxy
+import androidx.camera.view.LifecycleCameraController
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -17,14 +19,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,19 +38,24 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import com.krishiai.app.R
+import androidx.hilt.navigation.compose.hiltViewModel
+import java.util.concurrent.Executor
 
 @Composable
-fun DiseaseDetectionScreen() {
+fun DiseaseDetectionScreen(
+    viewModel: DiseaseViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
     var hasPermission by remember { mutableStateOf(false) }
     var capturedBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    var isAnalyzing by remember { mutableStateOf(false) }
-    var resultText by remember { mutableStateOf("") }
     
+    val controller = remember { 
+        LifecycleCameraController(context)
+    }
+
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -73,99 +81,111 @@ fun DiseaseDetectionScreen() {
         return
     }
 
-    if (capturedBitmap != null) {
-        // Analysis Result View
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = "Analysis Result", style = MaterialTheme.typography.headlineMedium)
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            Image(
-                bitmap = capturedBitmap!!.asImageBitmap(),
-                contentDescription = "Captured Image",
-                modifier = Modifier
-                    .size(300.dp)
-                    .clip(RoundedCornerShape(16.dp))
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            if (isAnalyzing) {
-                CircularProgressIndicator()
-                Text("Analyzing leaf...")
-            } else {
+    when (val state = uiState) {
+        is DiseaseUiState.Idle -> {
+            Box(modifier = Modifier.fillMaxSize()) {
+                CameraPreview(controller = controller, modifier = Modifier.fillMaxSize())
+                
+                // Capture Button
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 48.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            val executor = ContextCompat.getMainExecutor(context)
+                            controller.takePicture(
+                                executor,
+                                object : androidx.camera.core.ImageCapture.OnImageCapturedCallback() {
+                                    override fun onCaptureSuccess(image: ImageProxy) {
+                                        val bitmap = image.toBitmap()
+                                        capturedBitmap = bitmap
+                                        viewModel.analyzeImage(bitmap)
+                                        image.close()
+                                    }
+
+                                    override fun onError(exception: androidx.camera.core.ImageCaptureException) {
+                                        Toast.makeText(context, "Capture failed: ${exception.message}", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            )
+                        },
+                        modifier = Modifier.size(80.dp),
+                        shape = CircleShape,
+                    ) {
+                        // Capture icon/visual
+                    }
+                }
+                
                 Text(
-                    text = resultText,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = if (resultText.contains("Healthy")) Color.Green else Color.Red
+                    text = "Point camera at leaf",
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 48.dp)
+                        .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                        .padding(8.dp),
+                    color = Color.White
                 )
+            }
+        }
+        is DiseaseUiState.Loading -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("AI is analyzing the leaf...")
+                }
+            }
+        }
+        is DiseaseUiState.Success -> {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = "Analysis Result", style = MaterialTheme.typography.headlineMedium)
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                capturedBitmap?.let {
+                    Image(
+                        bitmap = it.asImageBitmap(),
+                        contentDescription = "Captured Image",
+                        modifier = Modifier
+                            .size(300.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Text(
+                    text = state.result,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                
                 Spacer(modifier = Modifier.height(32.dp))
+                
                 Button(onClick = { 
-                    capturedBitmap = null 
-                    resultText = ""
+                    viewModel.resetState()
+                    capturedBitmap = null
                 }) {
                     Text("Scan Another")
                 }
             }
         }
-    } else {
-        // Camera Preview View
-        Box(modifier = Modifier.fillMaxSize()) {
-            CameraPreview(modifier = Modifier.fillMaxSize())
-            
-            // Capture Button
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 48.dp)
-            ) {
-                 Button(
-                     onClick = {
-                         // Mock capture for now since CameraController is easier but requires changing Preview setup
-                         // Or use a simple mock behavior:
-                         isAnalyzing = true
-                         // Simulate capture and analysis
-                         // In a real app, use ImageCapture use case
-                         Toast.makeText(context, "Scanning...", Toast.LENGTH_SHORT).show()
-                         
-                         // Mock Logic to transition state
-                         // Ideally we capture a bitmap here. 
-                         // For this simulation without a physical device behaving perfectly, 
-                         // we might need a workaround or just simulate the flow.
-                         
-                         // Let's mock a success flow after 1s
-                         // In real impl, we'd take a picture via ImageCapture
-                         val mockBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
-                         mockBitmap.eraseColor(android.graphics.Color.GREEN)
-                         capturedBitmap = mockBitmap
-                         
-                         // Simulate Analysis
-                         // Use DiseaseAnalyzer here
-                         val isHealthy = Math.random() > 0.5
-                         resultText = if (isHealthy) "Healthy Crop" else "Disease Detected: Leaf Blight"
-                         isAnalyzing = false
-                     },
-                     modifier = Modifier.size(80.dp),
-                     shape = CircleShape,
-                     
-                 ) {
-                     // Inner circle
-                 }
+        is DiseaseUiState.Error -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "Error: ${state.message}", color = Color.Red)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = { viewModel.resetState() }) {
+                        Text("Retry")
+                    }
+                }
             }
-            
-            Text(
-                text = "Point camera at leaf",
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 48.dp)
-                    .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-                    .padding(8.dp),
-                color = Color.White
-            )
         }
     }
 }

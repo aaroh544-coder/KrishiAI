@@ -9,6 +9,7 @@ interface WeatherApi {
     suspend fun getCurrentWeather(
         @Query("latitude") lat: Double,
         @Query("longitude") lon: Double,
-        @Query("current_weather") currentWeather: Boolean = true
+        @Query("current_weather") currentWeather: Boolean = true,
+        @Query("hourly") hourly: String = "relative_humidity_2m"
     ): WeatherResponse
 }

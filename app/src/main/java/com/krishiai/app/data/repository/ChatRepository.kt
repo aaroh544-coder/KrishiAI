@@ -15,7 +15,7 @@ class ChatRepository @Inject constructor() {
     // WARNING: In production, API Key should be secured.
     private val generativeModel = GenerativeModel(
         modelName = "gemini-pro",
-        apiKey = "YOUR_GEMINI_API_KEY_HERE"
+        apiKey = "AIzaSyDevhbbhiaSK-Gwq1sEnEi_LuQxdSQX2AU"
     )
 
     fun sendMessage(userMessage: String): Flow<String> = flow {

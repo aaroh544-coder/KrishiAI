@@ -86,7 +86,9 @@ fun MainScreen(onLogout: () -> Unit) {
             startDestination = BottomNavItem.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(BottomNavItem.Home.route) { HomeScreen() }
+            composable(BottomNavItem.Home.route) { 
+                HomeScreen(onScanCropClick = { navController.navigate("disease_detection") }) 
+            }
             composable(BottomNavItem.Weather.route) { WeatherScreen() }
             composable(BottomNavItem.Mandi.route) { 
                 com.krishiai.app.ui.mandi.MandiScreen(

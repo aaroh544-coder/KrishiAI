@@ -33,9 +33,20 @@ class AuthViewModel @Inject constructor(
 
     private var verificationId: String? = null
 
+    init {
+        authRepository.currentUser?.let { user ->
+            _currentUserUid.value = user.uid
+            fetchUserProfile(user.uid)
+            _uiState.value = AuthUiState.Verified
+        }
+    }
+
     // For profile setup
     private val _currentUserUid = MutableStateFlow<String?>(null)
     val currentUserUid: StateFlow<String?> = _currentUserUid.asStateFlow()
+
+    private val _userProfile = MutableStateFlow<User?>(null)
+    val userProfile: StateFlow<User?> = _userProfile.asStateFlow()
 
     fun sendOtp(phoneNumber: String, activity: Activity) {
         viewModelScope.launch {
@@ -85,6 +96,7 @@ class AuthViewModel @Inject constructor(
         existsResult.onSuccess { exists ->
             if (exists) {
                 _uiState.value = AuthUiState.Verified
+                fetchUserProfile(uid)
             } else {
                 _uiState.value = AuthUiState.NewUser
             }
@@ -92,6 +104,15 @@ class AuthViewModel @Inject constructor(
             // If check fails, assume net error, or process as new user?
             // Safer to show error or retry.
              _uiState.value = AuthUiState.Error("Failed to check user profile")
+        }
+    }
+
+    fun fetchUserProfile(uid: String) {
+        viewModelScope.launch {
+            authRepository.getUserProfile(uid)
+                .onSuccess { user ->
+                    _userProfile.value = user
+                }
         }
     }
     

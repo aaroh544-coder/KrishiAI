@@ -29,7 +29,7 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             speechResult.collect { text ->
                 if (text.isNotBlank()) {
-                    sendMessage(text)
+                    sendMessage(text, isVoice = true)
                 }
             }
         }
@@ -43,7 +43,7 @@ class ChatViewModel @Inject constructor(
         speechManager.speak(text)
     }
 
-    fun sendMessage(text: String) {
+    fun sendMessage(text: String, isVoice: Boolean = false) {
         if (text.isBlank()) return
 
         _messages.add(ChatMessage(text, true))
@@ -54,6 +54,9 @@ class ChatViewModel @Inject constructor(
             repository.sendMessage(text).collect { response ->
                 _messages.removeLast() // Remove "Typing..."
                 _messages.add(ChatMessage(response, false))
+                if (isVoice) {
+                    speak(response)
+                }
             }
         }
     }
