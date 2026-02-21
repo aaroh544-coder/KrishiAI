@@ -18,7 +18,7 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-
+        
       - name: Install Gradle
         run: sudo apt-get install gradle -y
 
