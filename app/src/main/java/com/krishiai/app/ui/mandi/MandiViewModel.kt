@@ -3,6 +3,7 @@ package com.krishiai.app.ui.mandi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.krishiai.app.data.model.Mandi
+import com.krishiai.app.data.model.Review
 import com.krishiai.app.data.repository.MandiRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +32,9 @@ class MandiViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
+    private val _reviews = MutableStateFlow<List<Review>>(emptyList())
+    val reviews: StateFlow<List<Review>> = _reviews.asStateFlow()
+
     init {
         fetchMandiPrices()
     }
@@ -46,6 +50,21 @@ class MandiViewModel @Inject constructor(
         }
     }
 
+    fun fetchReviews(mandiId: String) {
+        viewModelScope.launch {
+            repository.getReviews(mandiId).collect {
+                _reviews.value = it
+            }
+        }
+    }
+
+    fun addReview(review: Review) {
+        viewModelScope.launch {
+            repository.addReview(review)
+            fetchReviews(review.mandiId)
+        }
+    }
+
     fun onSearchQueryChange(query: String) {
         _searchQuery.value = query
     }
@@ -53,7 +72,7 @@ class MandiViewModel @Inject constructor(
     fun addMandi(mandi: Mandi) {
         viewModelScope.launch {
             repository.addMandiPrice(mandi)
-            fetchMandiPrices() // Refresh list
+            fetchMandiPrices()
         }
     }
 }
