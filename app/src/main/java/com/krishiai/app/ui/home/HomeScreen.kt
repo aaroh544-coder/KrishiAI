@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -81,7 +82,7 @@ fun HomeScreen(
                 title = "Mandi Price",
                 value = if (uiState.latestMandi != null) "₹${uiState.latestMandi?.price}" else "--",
                 subtitle = uiState.latestMandi?.commodity ?: "Fetching...",
-                icon = Icons.Default.CameraAlt, // Placeholder icon
+                icon = Icons.Default.ShoppingBag,
                 modifier = Modifier.weight(1f),
                 containerColor = MaterialTheme.colorScheme.secondaryContainer
             )

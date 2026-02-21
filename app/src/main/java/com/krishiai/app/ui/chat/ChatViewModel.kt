@@ -3,8 +3,9 @@ package com.krishiai.app.ui.chat
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.krishiai.app.data.repository.ChatRepository
+import com.krishiai.app.util.SpeechManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -16,7 +17,7 @@ data class ChatMessage(
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val repository: ChatRepository,
-    private val speechManager: com.krishiai.app.util.SpeechManager
+    private val speechManager: SpeechManager
 ) : ViewModel() {
 
     private val _messages = mutableStateListOf<ChatMessage>()
@@ -27,7 +28,7 @@ class ChatViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            speechResult.collect { text ->
+            speechResult.collectLatest { text ->
                 if (text.isNotBlank()) {
                     sendMessage(text, isVoice = true)
                 }

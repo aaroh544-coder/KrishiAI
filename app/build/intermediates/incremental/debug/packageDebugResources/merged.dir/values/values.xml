@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Krishi AI</string>
+    <string name="gcm_defaultSenderId" translatable="false">1005338159407</string>
+    <string name="google_api_key" translatable="false">AIzaSyAxjdSrCmbO5U_o6YQd65fFS5WenegaWwo</string>
+    <string name="google_app_id" translatable="false">1:1005338159407:android:c701f998d76667c66399da</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyAxjdSrCmbO5U_o6YQd65fFS5WenegaWwo</string>
+    <string name="google_storage_bucket" translatable="false">krishiai-bcd4d.firebasestorage.app</string>
+    <string name="project_id" translatable="false">krishiai-bcd4d</string>
+    <style name="Theme.KrishiAI" parent="android:Theme.Material.Light.NoActionBar"/>
+</resources>

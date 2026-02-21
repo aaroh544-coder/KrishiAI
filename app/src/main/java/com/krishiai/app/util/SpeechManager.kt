@@ -37,7 +37,10 @@ class SpeechManager @Inject constructor(
                 override fun onRmsChanged(rmsdB: Float) {}
                 override fun onBufferReceived(buffer: ByteArray?) {}
                 override fun onEndOfSpeech() { _isListening.value = false }
-                override fun onError(error: Int) { _isListening.value = false }
+                override fun onError(error: Int) { 
+                    _isListening.value = false
+                    android.util.Log.e("SpeechManager", "Speech recognition error: $error")
+                }
                 override fun onResults(results: Bundle?) {
                     val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                     if (!matches.isNullOrEmpty()) {
@@ -52,7 +55,9 @@ class SpeechManager @Inject constructor(
 
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
-            tts?.language = Locale("en", "IN") // Set to Indian English or Hindi if preferred
+            tts?.language = Locale("en", "IN")
+        } else {
+            android.util.Log.e("SpeechManager", "TTS initialization failed: $status")
         }
     }
 
@@ -76,6 +81,8 @@ class SpeechManager @Inject constructor(
     fun shutdown() {
         tts?.stop()
         tts?.shutdown()
+        speechRecognizer?.stopListening()
+        speechRecognizer?.cancel()
         speechRecognizer?.destroy()
     }
 }
