@@ -38,11 +38,15 @@ android {
         jvmTarget = "17"
     }
 
-    // 🔥 Ignore broken folders
-    sourceSets["main"].java {
-        exclude("com/krishiai/app/data/**")
-        exclude("com/krishiai/app/di/**")
-        exclude("com/krishiai/app/ui/**")
+    // ✅ Correct Kotlin DSL exclusion
+    sourceSets {
+        getByName("main") {
+            java {
+                exclude("com/krishiai/app/data/**")
+                exclude("com/krishiai/app/di/**")
+                exclude("com/krishiai/app/ui/**")
+            }
+        }
     }
 }
 
