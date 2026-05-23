@@ -1,9 +1,6 @@
-sourceSets {
-    getByName("main") {
-        java {
-            exclude("com/krishiai/app/data/**")
-            exclude("com/krishiai/app/di/**")
-            exclude("com/krishiai/app/ui/**")
-        }
-    }
+plugins {
+    id("org.jetbrains.kotlin.android") version "1.9.20" apply false
+    id("com.android.application") version "8.1.4" apply false
+    id("com.google.dagger.hilt.android") version "2.48" apply false
+    id("com.google.gms.google-services") version "4.4.0" apply false
 }
