@@ -58,15 +58,6 @@ android {
         }
     }
 
-    sourceSets {
-        getByName("main") {
-            java {
-                exclude("com/krishiai/app/data/**")
-                exclude("com/krishiai/app/di/**")
-                exclude("com/krishiai/app/ui/**")
-            }
-        }
-    }
 }
 
 dependencies {
@@ -138,3 +129,4 @@ dependencies {
 kapt {
     correctErrorTypes = true
 }
+
